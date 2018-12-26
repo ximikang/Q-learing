@@ -1,6 +1,7 @@
 #-*- utf-8 -*-
 import numpy as np
 import random
+import turtle as t
 class Cliff(object):
     def __init__(self):
         self.reward = self._reward_init()
@@ -8,6 +9,8 @@ class Cliff(object):
         self.row = 4
         self.col = 12
         self.gamma = 0.7
+        self.start_state = (3, 0)
+        self.end_state = (3, 11)
         self.q_matrix = np.zeros((4,12,5))
         self.main()
 
@@ -17,6 +20,7 @@ class Cliff(object):
         re[1][5:8] = np.ones((3))*-1
         # 悬崖
         re[3][1:11] = np.ones((10))*-100
+        re[3][11] = 100
         return re
 
     def valid_action(self, current_state):
@@ -51,11 +55,36 @@ class Cliff(object):
         next_row, next_col = next_state
         r = self.reward[next_row, next_col]
         return r
+    def path(self):
+        t.speed(10)
+        t.begin_fill()
+        paths = []
+        current_state = self.start_state
+        t.pensize(5)
+        t.penup()
+        t.goto(current_state)
+        t.pendown()
+        #移动到初始位置
+        paths.append(current_state)
+        while current_state != self.end_state:
+            current_row, current_col = current_state
+            valid_action = self.valid_action(current_state)
+            valid_value = [self.q_matrix[current_row][current_col][x] for x in valid_action]
+            max_value = max(valid_value)
+            action = np.where(self.q_matrix[current_row][current_col] == max_value)
+            print(current_state,'-------------',action)
+            next_state = self.transition(current_state,int(random.choice(action[0])))
+            paths.append(next_state)
+            next_row,next_col = next_state
+            t.goto(next_col*20, 60-next_row*20)
+            current_state = next_state
+
+
+ 
     def main(self):
         for i in range(1000):
-            start_state = (3, 0)
-            current_state = start_state
-            while current_state != (3, 11):
+            current_state = self.start_state
+            while current_state != self.end_state:
                 action = random.choice(self.valid_action(current_state))
                 next_state = self.transition(current_state, action)
                 future_rewards = []
@@ -68,6 +97,9 @@ class Cliff(object):
                 current_state = next_state
                 #print(self.q_matrix)
         print(self.q_matrix)
+        for i in range(1000):
+            self.path()
+
 if __name__ == "__main__":
     Cliff()
 
